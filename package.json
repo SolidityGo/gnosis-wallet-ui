@@ -1,0 +1,84 @@
+{
+  "name": "gnosis-wallet-ui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@ant-design/icons": "^4.7.0",
+    "@react-spring/parallax": "^9.3.1",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "@types/classnames": "^2.3.1",
+    "@types/howler": "^2.2.4",
+    "@types/numeral": "^2.0.2",
+    "@types/styled-components": "^5.1.15",
+    "@usedapp/core": "^0.6.3",
+    "antd": "^4.17.2",
+    "classnames": "^2.3.1",
+    "ethers": "^5.5.2",
+    "howler": "^2.2.3",
+    "numeral": "^2.0.6",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-query": "^3.34.7",
+    "react-router-dom": "^6.0.2",
+    "react-scripts": "4.0.3",
+    "react-spring": "^9.3.2",
+    "react-use": "^17.3.1",
+    "react-use-gesture": "^5.0.0",
+    "styled-components": "^5.3.3",
+    "tachyons": "^4.12.0",
+    "web-vitals": "^1.0.1"
+  },
+  "scripts": {
+    "start": "craco start",
+    "build": "GENERATE_SOURCEMAP=false craco build",
+    "test": "craco test",
+    "prepare": "husky install",
+    "postinstall": "npm run generate-typed-contracts",
+    "generate-typed-contracts": "typechain --target=ethers-v5 'src/sdk/abi/*.json' --out-dir 'src/sdk/contracts'"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@typechain/ethers-v5": "^8.0.5",
+    "@types/jest": "^27.0.3",
+    "@types/node": "^16.11.10",
+    "@types/react": "^17.0.37",
+    "@types/react-dom": "^17.0.11",
+    "craco": "^0.0.3",
+    "craco-less": "^1.20.0",
+    "husky": "^7.0.0",
+    "lint-staged": "^12.1.2",
+    "prettier": "^2.5.0",
+    "typechain": "^6.1.0",
+    "typescript": "^4.5.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  }
+}
