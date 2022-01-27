@@ -1,21 +1,22 @@
-import React, { useState } from 'react';
-import { Button, Input, List, notification, Typography } from 'antd';
+import React, {useState} from 'react';
+import {Button, Input, List, notification, Typography} from 'antd';
 import styled from 'styled-components';
-import { useGnosis } from '../../hooks/useGnosis';
-import { useMutation } from 'react-query';
-import { debug } from '../../utils/debug';
-import { parseUnits } from 'ethers/lib/utils';
-import { ChainId, Token, useToken } from '@usedapp/core';
-import { TokenBalance } from '../../components/TokenBalance';
-import { TxPayload } from '../../sdk/GnosisTypes';
+import {useGnosis} from '../../hooks/useGnosis';
+import {useMutation} from 'react-query';
+import {debug} from '../../utils/debug';
+import {formatUnits, parseUnits} from 'ethers/lib/utils';
+import {ChainId, Token, useToken} from '@usedapp/core';
+import {TokenBalance} from '../../components/TokenBalance';
+import {TxPayload} from '../../sdk/GnosisTypes';
 import {isInputAddress, isInputFloatString, clear0x, isInputSignatureString} from '../../utils/string'
+import {BigNumber} from "ethers";
 
 export const Gnosis: React.FC = () => {
   const [inputTokenAddress, setInputTokenAddress] = useState('');
   const selectToken = useToken(inputTokenAddress);
   const [gnosisProxyAddress, setGnosisProxyAddress] = useState('');
 
-  const { data: gnosis } = useGnosis(gnosisProxyAddress, inputTokenAddress);
+  const {data: gnosis} = useGnosis(gnosisProxyAddress, inputTokenAddress);
 
   const [inputAmount, setInputAmount] = useState('');
   const [inputReceiverAddress, setInputReceiverAddress] = useState('');
@@ -23,33 +24,33 @@ export const Gnosis: React.FC = () => {
   const [mySignature, setMySignature] = useState('');
   const [signatures, setSignatures] = useState<string[]>([]);
 
-  const { mutateAsync: signTransaction, isLoading: isSigning } = useMutation(
+  const {mutateAsync: signTransaction, isLoading: isSigning} = useMutation(
     async () => {
       const payload = await generateTxPayload();
       if (!gnosis) {
-        return notification.error({ message: 'data loading' });
+        return notification.error({message: 'data loading'});
       }
       if (payload === null) {
-        return notification.error({ message: 'invalid payload' });
+        return notification.error({message: 'invalid payload'});
       }
       return await gnosis.signTransaction(payload);
     },
   );
 
-  const { mutateAsync: execTransaction, isLoading: isExecuting } = useMutation(
+  const {mutateAsync: execTransaction, isLoading: isExecuting} = useMutation(
     async () => {
       if (!gnosis) {
-        return notification.error({ message: 'data loading' });
+        return notification.error({message: 'data loading'});
       }
 
       if (signatures.length < gnosis.threshold) {
-        return notification.error({ message: 'signatures not enough' });
+        return notification.error({message: 'signatures not enough'});
       }
 
       const payload = await generateTxPayload(signatures);
 
       if (payload === null) {
-        return notification.error({ message: 'invalid payload' });
+        return notification.error({message: 'invalid payload'});
       }
 
       await gnosis.execTransaction(payload);
@@ -58,10 +59,10 @@ export const Gnosis: React.FC = () => {
   );
 
   const generateTxPayload = async (signatures?: string[]): Promise<TxPayload | null> => {
-    if (!gnosis || !inputReceiverAddress || inputAmount === '0' || inputAmount === '') {
+    if (!gnosis || !inputReceiverAddress || inputAmount === '0' || inputAmount === '' || !selectToken?.decimals) {
       return null;
     }
-    const payload = await gnosis.generateTxPayload(inputTokenAddress, inputReceiverAddress, parseUnits(inputAmount), gnosis.nonce);
+    const payload = await gnosis.generateTxPayload(inputTokenAddress, inputReceiverAddress, parseUnits(inputAmount, BigNumber.from(selectToken.decimals)), gnosis.nonce);
 
     if (signatures) {
       let signaturesHex = '';
@@ -78,6 +79,13 @@ export const Gnosis: React.FC = () => {
 
     return payload;
   };
+
+  const setMaxInputAmount = () => {
+    if (!selectToken || !gnosis?.tokenBalance) {
+      return
+    }
+    setInputAmount(formatUnits(gnosis.tokenBalance, BigNumber.from(selectToken.decimals)).toString())
+  }
 
   const renderInputSignatures = () => {
     if (!gnosis) {
@@ -132,8 +140,8 @@ export const Gnosis: React.FC = () => {
         />
         <div><h4 className='mt2'>Token Name:</h4>  {selectToken?.name} </div>
         <TokenBalance specAccount={gnosisProxyAddress} token={
-          selectToken && new Token(selectToken.name, selectToken.symbol, ChainId.BSC, inputTokenAddress)
-        } />
+          selectToken && new Token(selectToken.name, selectToken.symbol, ChainId.BSC, inputTokenAddress, selectToken.decimals)
+        }/>
 
         <div><h4 className='mt2'>Owners:</h4>  {gnosis ? gnosis.owners.map(address => (<div>{address}</div>)) : ''}
         </div>
@@ -159,7 +167,12 @@ export const Gnosis: React.FC = () => {
           onChange={(e) => {
             isInputFloatString(e.target.value) && setInputAmount(e.target.value);
           }}
-          placeholder=''
+          placeholder='<= Balance'
+          suffix={
+            <Button size="small" type="link" onClick={setMaxInputAmount}>
+              MAX
+            </Button>
+          }
         />
 
         <div className='mb2'><h4 className='mt2'>Gnosis Wallet Nonce:</h4> {gnosis ? gnosis.nonce : '-'}</div>
