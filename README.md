@@ -2,18 +2,26 @@
 
 ## Quick Start
 
+Ensure `node>=v12.20.0` is installed.
+
 ```sh
 yarn install
 yarn start
 ```
 
+The website is on http://localhost:3000/
+
+## Usage
+
+1. Input the address of your Gnosis wallet and the BEP20 token; 
+2. Then the website will show the name of the token and the balance;
+3. Input the `Receiver` and `Amount` that you want to transfer, click `Sign Transaction`, connect to metamask and sign the message;
+4. A blob will show under `My Signature`;
+5. Please repeat step 1 to step 4 for each owner of the Gnosis wallet until collect enoguh signatures;
+6. Input the collected signatures into `Execute Multi-Signed Tx`;
+7. Click `Exec Transaction`, and sign.
+
 ### Configuration
 
 - Config entry
   - [useSdk](src/hooks/useSdk.ts)
-
-### Generate Contract Bindings
-
-If a new abi was generated, we can put them in [src/sdk/abi](src/sdk/abi) folder, and then
-run `yarn run generate-typed-contracts` to generate the contract TS bindings, then we can find bindings
-in [src/sdk/contracts](src/sdk/contracts)
