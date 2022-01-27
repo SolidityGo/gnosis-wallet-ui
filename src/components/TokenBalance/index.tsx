@@ -20,7 +20,7 @@ export const TokenBalance: React.FC<{ token?: Token; specAccount?: string }> = (
   if (!props.token || !account) {
     return (
       <span>
-        Balance: <AssetAmount asset={{ token: props.token }} />
+        Balance In Gnosis Wallet: <AssetAmount asset={{ token: props.token }} />
       </span>
     );
   }

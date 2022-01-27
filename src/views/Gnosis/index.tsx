@@ -10,6 +10,7 @@ import {TokenBalance} from '../../components/TokenBalance';
 import {TxPayload} from '../../sdk/GnosisTypes';
 import {isInputAddress, isInputFloatString, clear0x, isInputSignatureString} from '../../utils/string'
 import {BigNumber} from "ethers";
+import {ConnectWalletButton} from "../../components/ConnectWalletButton";
 
 export const Gnosis: React.FC = () => {
   const [inputTokenAddress, setInputTokenAddress] = useState('');
@@ -115,6 +116,8 @@ export const Gnosis: React.FC = () => {
 
   return (
     <FullContainer>
+      <ConnectWalletButton/>
+
       <div className='mb4'>
         <h1>Info</h1>
         <div>GnosisSafe Proxy Address</div>
