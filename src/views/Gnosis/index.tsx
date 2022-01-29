@@ -1,26 +1,25 @@
 import React, {useState} from 'react';
-import {Button, Input, List, notification, Typography} from 'antd';
+import {Button, Input, List, notification} from 'antd';
 import styled from 'styled-components';
-import {useGnosis} from '../../hooks/useGnosis';
+import {useGnosis, useQueryApproveInfo} from '../../hooks/useGnosis';
 import {useMutation} from 'react-query';
 import {debug} from '../../utils/debug';
 import {formatUnits, parseUnits} from 'ethers/lib/utils';
 import {ChainId, Token, useToken} from '@usedapp/core';
 import {TokenBalance} from '../../components/TokenBalance';
 import {UnsignedTxPayload} from '../../sdk/GnosisTypes';
-import {isInputAddress, isInputFloatString, isInputSignatureString} from '../../utils/string'
+import {isInputAddress, isInputFloatString} from '../../utils/string'
 import {BigNumber, ethers} from "ethers";
 import {ConnectWalletButton} from "../../components/ConnectWalletButton";
 import {TokenInfo} from "@usedapp/core/dist/esm/src/model/TokenInfo";
 
-export const WalletToken: React.FC<{ inputTokenAddress: string; gnosisProxyAddress: string; }> = (props) => {
+export const GnosisWallet: React.FC<{ inputTokenAddress: string; gnosisProxyAddress: string; }> = (props) => {
   const {inputTokenAddress, gnosisProxyAddress} = props
   const {data: gnosis} = useGnosis(gnosisProxyAddress, inputTokenAddress);
 
   const selectToken = useToken(inputTokenAddress) as TokenInfo;
   const [inputAmount, setInputAmount] = useState('');
   const [inputReceiverAddress, setInputReceiverAddress] = useState('');
-  const [mySignature, setMySignature] = useState('');
 
   const [unsignedTxPayload, setUnsignedTxPayload] = useState<UnsignedTxPayload | null>(null)
 
@@ -90,35 +89,33 @@ export const WalletToken: React.FC<{ inputTokenAddress: string; gnosisProxyAddre
         <div className='mb2'><h4 className='mt2'>Gnosis Wallet Nonce:</h4> {gnosis ? gnosis.nonce : '-'}</div>
 
         <Button loading={isSigning} onClick={async () => {
-          const sig = await signTransaction() as string;
-          setMySignature(sig);
+          await signTransaction();
         }}>Sign Transaction</Button>
-
-        <div><h4 className='mt2'>My Signature:</h4></div>
-        <h4>
-          <Typography.Text strong>{mySignature}</Typography.Text>
-        </h4>
       </div>
 
-      {unsignedTxPayload && <TxExecutor gnosis={gnosis} unsignedPayload={unsignedTxPayload}/>}
+      {(unsignedTxPayload && gnosis) &&
+        <TxExecutor
+          gnosisProxyAddress={gnosisProxyAddress}
+          sortedOwners={gnosis?.owners}
+          gnosis={gnosis}
+          unsignedPayload={unsignedTxPayload}/>}
     </>
   )
 }
 
-export const TxExecutor: React.FC<{ unsignedPayload: UnsignedTxPayload; gnosis: any }> = ({
-                                                                                            unsignedPayload,
-                                                                                            gnosis
-                                                                                          }) => {
-
-  const [signatures, setSignatures] = useState<string[]>([]);
+export const TxExecutor: React.FC<{
+  gnosisProxyAddress: string;
+  sortedOwners: string[];
+  unsignedPayload: UnsignedTxPayload;
+  gnosis: any;
+}> = ({gnosisProxyAddress, sortedOwners, unsignedPayload, gnosis}) => {
+  const {data: ownersApprovedInfo} = useQueryApproveInfo(gnosisProxyAddress, sortedOwners, unsignedPayload)
 
   const {mutateAsync: execTransaction, isLoading: isExecuting} = useMutation(
     async (unsignedPayload: UnsignedTxPayload) => {
-      if (!gnosis || signatures.length < gnosis.threshold) {
-        return notification.error({message: 'signatures not enough'});
-      }
 
-      const payload = await gnosis.generateSignedTxPayload(unsignedPayload, signatures);
+      const payload = await gnosis.generateSignedTxPayload(unsignedPayload);
+
       console.log("signedPayload", payload)
       gnosis.execTransaction(payload).then(() => {
         notification.success({message: "exec tx succeed"})
@@ -127,37 +124,32 @@ export const TxExecutor: React.FC<{ unsignedPayload: UnsignedTxPayload; gnosis: 
   );
 
   const renderInputSignatures = () => {
-    if (!gnosis) {
+    if (!gnosis || !ownersApprovedInfo) {
       return;
     }
     const inputList = [];
     for (let i = 0; i < gnosis.threshold; i++) {
       inputList.push(
         <List.Item>
-          <Input
-            key={i}
-            className='ba b--grey mr2 mb2'
-            value={signatures.length > i ? signatures[i] : ''}
-            onChange={(e) => isInputSignatureString(e.target.value) && setSignatures((prev: string[]) => {
-              const newSigs: string[] = [...prev];
-              newSigs[i] = e.target.value;
-              return newSigs;
-            })}
-            placeholder='signature by each owner'
-          />
-        </List.Item>,
+          <div>{ownersApprovedInfo.sortedOwners[i]} - {ownersApprovedInfo.ownersApprovedSet[i] && 'approved'}</div>
+        </List.Item>
+
       );
     }
-    return <List>
-      {inputList}
-    </List>;
+    return <div>
+      <div>Approved Count: {ownersApprovedInfo.approvedCount}</div>
+      <div>Threshold: {gnosis.threshold}</div>
+      <List>
+        {inputList}
+      </List>
+    </div>;
   };
 
   return (
     <div className='mb4'>
       <h1>Execute Multi-Signed Tx</h1>
       {
-        gnosis && renderInputSignatures()
+        (gnosis && ownersApprovedInfo) && renderInputSignatures()
       }
       <Button loading={isExecuting} onClick={async () => {
         await execTransaction(unsignedPayload);
@@ -199,7 +191,7 @@ export const Gnosis: React.FC = () => {
         />
 
         {(ethers.utils.isAddress(inputTokenAddress) && ethers.utils.isAddress(gnosisProxyAddress))
-          ? <WalletToken inputTokenAddress={inputTokenAddress} gnosisProxyAddress={gnosisProxyAddress}/>
+          ? <GnosisWallet inputTokenAddress={inputTokenAddress} gnosisProxyAddress={gnosisProxyAddress}/>
           : <>
             <h1>Sign BEP-20 Transfer Tx</h1>
             <Button onClick={() => {
