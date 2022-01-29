@@ -1,8 +1,8 @@
-import { ethers } from 'ethers';
-import { GnosisSafe, GnosisSafe__factory } from './contracts';
+import {ethers} from 'ethers';
+import {GnosisSafe, GnosisSafe__factory} from './contracts';
 import {UnsignedTxPayload, GnosisSdkInterface, GnosisConfig, SignedTxPayload} from './GnosisTypes';
-import { JsonRpcSigner } from '@ethersproject/providers/src.ts/json-rpc-provider';
-import { debug } from '../utils/debug';
+import {JsonRpcSigner} from '@ethersproject/providers/src.ts/json-rpc-provider';
+import {debug} from '../utils/debug';
 
 export type TxHash = string;
 export type Address = string;
@@ -20,15 +20,19 @@ export class GnosisSdk implements GnosisSdkInterface {
     const nonce = await this.GnosisSafeContract.nonce()
     const threshold = await this.GnosisSafeContract.getThreshold()
     const owners = await this.GnosisSafeContract.getOwners()
+
+    const sortedOwners = [...owners]
+    sortedOwners.sort()
+
     return {
       nonce: nonce.toNumber(),
       threshold: threshold.toNumber(),
-      owners: owners,
+      owners: sortedOwners,
     } as GnosisConfig
   }
 
-  async signTransaction(payload: UnsignedTxPayload): Promise<string> {
-    const safeTxHash = await this.GnosisSafeContract.getTransactionHash(
+  async getSafeTxHash(payload: UnsignedTxPayload): Promise<string> {
+    return await this.GnosisSafeContract.getTransactionHash(
       payload.to,
       payload.value,
       payload.data,
@@ -40,12 +44,25 @@ export class GnosisSdk implements GnosisSdkInterface {
       ethers.constants.AddressZero,
       payload.nonce
     );
+  }
 
-    const account = (await this.signer.getAddress()).toLowerCase()
-    const signature = await this.signer.provider.send('eth_sign', [account, safeTxHash])
-    debug("signature", signature);
+  async getOwnersApproved(owners: Address[], safeTxHash: string): Promise<boolean[]> {
+    const ownersApproved = []
 
-    return signature
+    for (let i = 0; i < owners.length; i++) {
+      const owner = owners[i]
+      const approvedNumber = await this.GnosisSafeContract.approvedHashes(owner, safeTxHash)
+      ownersApproved.push(approvedNumber.gt(ethers.constants.Zero))
+    }
+    debug('approved', ownersApproved)
+    return ownersApproved
+  }
+
+  async signTransaction(payload: UnsignedTxPayload): Promise<string> {
+    const safeTxHash = await this.getSafeTxHash(payload);
+    const tx = await this.GnosisSafeContract.approveHash(safeTxHash)
+    await tx.wait()
+    return tx.hash
   }
 
   async execTransaction(payload: SignedTxPayload): Promise<TxHash> {

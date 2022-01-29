@@ -14,6 +14,8 @@ export interface UnsignedTxPayload {
 
 export interface SignedTxPayload extends UnsignedTxPayload {
   signatures: HexString;  // e.g. "0x1234"
+  ownersApprovedSet: boolean[];
+  sortedOwners: Address[];
 }
 
 export interface GnosisConfig {
@@ -24,6 +26,10 @@ export interface GnosisConfig {
 
 export interface GnosisSdkInterface {
   getGnosisConfig(): Promise<GnosisConfig>;
+
+  getSafeTxHash(payload: UnsignedTxPayload): Promise<string>;
+
+  getOwnersApproved(owners: Address[], safeTxHash: string): Promise<boolean[]>;
 
   signTransaction(payload: UnsignedTxPayload): Promise<string>;
 
