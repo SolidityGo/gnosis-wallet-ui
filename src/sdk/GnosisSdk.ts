@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { GnosisSafe, GnosisSafe__factory } from './contracts';
-import { TxPayload, GnosisSdkInterface, GnosisConfig } from './GnosisTypes';
+import {UnsignedTxPayload, GnosisSdkInterface, GnosisConfig, SignedTxPayload} from './GnosisTypes';
 import { JsonRpcSigner } from '@ethersproject/providers/src.ts/json-rpc-provider';
 import { debug } from '../utils/debug';
 
@@ -27,7 +27,7 @@ export class GnosisSdk implements GnosisSdkInterface {
     } as GnosisConfig
   }
 
-  async signTransaction(payload: TxPayload): Promise<string> {
+  async signTransaction(payload: UnsignedTxPayload): Promise<string> {
     const safeTxHash = await this.GnosisSafeContract.getTransactionHash(
       payload.to,
       payload.value,
@@ -48,7 +48,7 @@ export class GnosisSdk implements GnosisSdkInterface {
     return signature
   }
 
-  async execTransaction(payload: TxPayload): Promise<TxHash> {
+  async execTransaction(payload: SignedTxPayload): Promise<TxHash> {
     const tx = await this.GnosisSafeContract.execTransaction(
       payload.to,
       payload.value,
@@ -59,7 +59,7 @@ export class GnosisSdk implements GnosisSdkInterface {
       0,
       ethers.constants.AddressZero,
       ethers.constants.AddressZero,
-      payload.signatures ? payload.signatures : '',
+      payload.signatures,
     );
 
 

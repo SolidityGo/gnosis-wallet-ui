@@ -7,8 +7,7 @@ import styled from 'styled-components';
 
 const ButtonWrapper = styled.div`
   button {
-    border: none;
-    background: transparent;
+    margin-left: 2rem;
   }
 
   span {

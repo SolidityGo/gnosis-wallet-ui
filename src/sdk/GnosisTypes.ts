@@ -5,13 +5,15 @@ export type Address = string;
 export type HexString = string;
 
 
-export interface TxPayload {
-  sender?: Address;
+export interface UnsignedTxPayload {
   to: Address;
   value: ethers.BigNumber;
   data: HexString;  // e.g. "0x1234"
   nonce: number;
-  signatures?: HexString;  // e.g. "0x1234"
+}
+
+export interface SignedTxPayload extends UnsignedTxPayload {
+  signatures: HexString;  // e.g. "0x1234"
 }
 
 export interface GnosisConfig {
@@ -23,7 +25,7 @@ export interface GnosisConfig {
 export interface GnosisSdkInterface {
   getGnosisConfig(): Promise<GnosisConfig>;
 
-  signTransaction(payload: TxPayload): Promise<TxHash>;
+  signTransaction(payload: UnsignedTxPayload): Promise<string>;
 
-  execTransaction(payload: TxPayload): Promise<TxHash>;
+  execTransaction(payload: SignedTxPayload): Promise<TxHash>;
 }
