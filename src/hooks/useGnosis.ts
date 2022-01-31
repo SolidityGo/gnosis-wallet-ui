@@ -66,12 +66,13 @@ export function useGnosis(gnosisProxyAddress: string, tokenAddress: string): Use
           ERC20Amount: BigNumber,
           nonce: number,
         ) => {
-          const tx = await tokenInstance.populateTransaction.transfer(ERC20Receiver, ERC20Amount);
+          const calldata = tokenInstance.interface.encodeFunctionData('transfer', [ERC20Receiver, ERC20Amount]);
+
           return {
             sender: gnosisProxyAddress,
             to: tokenAddress,
             value: BigNumber.from(0),
-            data: tx.data || '',
+            data: calldata,
             nonce,
           } as UnsignedTxPayload;
         },

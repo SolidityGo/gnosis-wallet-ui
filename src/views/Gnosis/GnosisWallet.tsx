@@ -1,16 +1,16 @@
-import React, {useState} from "react";
-import {useGnosis} from "../../hooks/useGnosis";
-import {ChainId, Token, useToken} from "@usedapp/core";
-import {TokenInfo} from "@usedapp/core/dist/esm/src/model/TokenInfo";
-import {UnsignedTxPayload} from "../../sdk/GnosisTypes";
-import {useMutation} from "react-query";
-import {Button, Input, notification} from "antd";
-import {formatUnits, parseUnits} from "ethers/lib/utils";
-import {BigNumber} from "ethers";
-import {debug} from "../../utils/debug";
-import {TokenBalance} from "../../components/TokenBalance";
-import {isInputAddress, isInputFloatString} from "../../utils/string";
-import { TxExecutor } from './TxExcutor'
+import React, { useState } from 'react';
+import { useGnosis } from '../../hooks/useGnosis';
+import { ChainId, Token, useToken } from '@usedapp/core';
+import { TokenInfo } from '@usedapp/core/dist/esm/src/model/TokenInfo';
+import { UnsignedTxPayload } from '../../sdk/GnosisTypes';
+import { useMutation } from 'react-query';
+import { Button, Input, notification } from 'antd';
+import { formatUnits, parseUnits } from 'ethers/lib/utils';
+import { BigNumber } from 'ethers';
+import { debug } from '../../utils/debug';
+import { TokenBalance } from '../../components/TokenBalance';
+import { isInputAddress, isInputFloatString } from '../../utils/string';
+import { TxExecutor } from './TxExcutor';
 
 export const GnosisWallet: React.FC<{ inputTokenAddress: string; gnosisProxyAddress: string }> = (props) => {
   const { inputTokenAddress, gnosisProxyAddress } = props;
@@ -59,7 +59,8 @@ export const GnosisWallet: React.FC<{ inputTokenAddress: string; gnosisProxyAddr
   return (
     <>
       <div>
-        <h4 className="mt2">Owners:</h4> {gnosis ? gnosis.owners.map((address) => <div>{address}</div>) : ''}
+        <h4 className="mt2">Owners:</h4>{' '}
+        {gnosis ? gnosis.owners.map((address) => <div key={address}>{address}</div>) : ''}
       </div>
       <div>
         <h4 className="mt2">Threshold:</h4> {gnosis ? gnosis.threshold : ''}{' '}
@@ -101,7 +102,7 @@ export const GnosisWallet: React.FC<{ inputTokenAddress: string; gnosisProxyAddr
               type="link"
               onClick={() => {
                 gnosis?.tokenBalance &&
-                setInputAmount(formatUnits(gnosis.tokenBalance, BigNumber.from(selectToken.decimals)).toString());
+                  setInputAmount(formatUnits(gnosis.tokenBalance, BigNumber.from(selectToken.decimals)).toString());
               }}
             >
               MAX

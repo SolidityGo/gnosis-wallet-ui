@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { isInputAddress } from '../../utils/string';
 import { ethers } from 'ethers';
 import { ConnectWalletButton } from '../../components/ConnectWalletButton';
-import { GnosisWallet } from './GnosisWallet'
+import { GnosisWallet } from './GnosisWallet';
 
 export const Gnosis: React.FC = () => {
   const [gnosisProxyAddress, setGnosisProxyAddress] = useState('');

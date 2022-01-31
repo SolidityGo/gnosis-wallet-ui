@@ -1,8 +1,8 @@
-import React from "react";
-import {UnsignedTxPayload} from "../../sdk/GnosisTypes";
-import {useQueryApproveInfo} from "../../hooks/useGnosis";
-import {useMutation} from "react-query";
-import {Button, List, notification} from "antd";
+import React from 'react';
+import { UnsignedTxPayload } from '../../sdk/GnosisTypes';
+import { useQueryApproveInfo } from '../../hooks/useGnosis';
+import { useMutation } from 'react-query';
+import { Button, List, notification } from 'antd';
 
 export const TxExecutor: React.FC<{
   gnosisProxyAddress: string;
@@ -30,34 +30,34 @@ export const TxExecutor: React.FC<{
     const inputList = [];
     for (let i = 0; i < gnosis.threshold; i++) {
       inputList.push(
-        <List.Item>
+        <List.Item key={i}>
           <div>
             {ownersApprovedInfo.sortedOwners[i]} - {ownersApprovedInfo.ownersApprovedSet[i] && 'approved'}
-        </div>
+          </div>
         </List.Item>,
       );
     }
     return (
       <div>
         <div>Approved Count: {ownersApprovedInfo.approvedCount}</div>
-    <div>Threshold: {gnosis.threshold}</div>
-    <List>{inputList}</List>
-    </div>
-  );
+        <div>Threshold: {gnosis.threshold}</div>
+        <List>{inputList}</List>
+      </div>
+    );
   };
 
   return (
     <div className="mb4">
       <h1>Execute Multi-Signed Tx</h1>
-  {gnosis && ownersApprovedInfo && renderInputSignatures()}
-  <Button
-    loading={isExecuting}
-  onClick={async () => {
-    await execTransaction(unsignedPayload);
-  }}
->
-  Exec Transaction
-  </Button>
-  </div>
-);
+      {gnosis && ownersApprovedInfo && renderInputSignatures()}
+      <Button
+        loading={isExecuting}
+        onClick={async () => {
+          await execTransaction(unsignedPayload);
+        }}
+      >
+        Exec Transaction
+      </Button>
+    </div>
+  );
 };
